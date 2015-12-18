@@ -17,7 +17,7 @@ class BabelHash
     invert_bools = method(:invert_if).curry[@opts[:invert_booleans]]
 
     @translated = @map.each.with_object({}) do |(key, value), memo|
-      deep_set(key, invert_bools[deep_get(value, subject)], memo)
+      deep_set(value, invert_bools[deep_get(key, subject)], memo)
     end.with_indifferent_access
   end
 

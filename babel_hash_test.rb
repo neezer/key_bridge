@@ -6,14 +6,14 @@ class BabelHashTest < MiniTest::Unit::TestCase
   def setup
     @opts = {}
     @map = {
-      'primaryEmail'                 => 'address',
-      'password'                     => 'password',
-      'name.givenName'               => 'first_name',
-      'name.familyName'              => 'last_name',
-      'organizations[0].department'  => 'department',
-      'organizations[0].title'       => 'title',
-      'includeInGlobalAddressList'   => 'privacy',
-      'orgUnitPath'                  => 'org_unit_path'
+      'address'       => 'primaryEmail',
+      'password'      => 'password',
+      'first_name'    => 'name.givenName',
+      'last_name'     => 'name.familyName',
+      'department'    => 'organizations[0].department',
+      'title'         => 'organizations[0].title',
+      'privacy'       => 'includeInGlobalAddressList',
+      'org_unit_path' => 'orgUnitPath'
     }
   end
 
@@ -21,7 +21,7 @@ class BabelHashTest < MiniTest::Unit::TestCase
     @translator ||= BabelHash.new(@map, @opts)
   end
 
-  def google_api_response
+  def google_api_hash
     {
       'primaryEmail' => 'milton.waddams@initech.com',
       'password' => 'No salt',
@@ -73,21 +73,21 @@ class BabelHashTest < MiniTest::Unit::TestCase
     translator.reverse!
 
     assert_equal 'milton.waddams@initech.com',
-      translator.translate(google_api_response)['address']
+      translator.translate(google_api_hash)['address']
   end
 
   def test_reverse_translate_deep_keys
     translator.reverse!
 
     assert_equal 'Milton',
-      translator.translate(google_api_response)['first_name']
+      translator.translate(google_api_hash)['first_name']
   end
 
   def test_reverse_translate_array_plumbing
     translator.reverse!
 
     assert_equal 'Reporting',
-      translator.translate(google_api_response)['department']
+      translator.translate(google_api_hash)['department']
   end
 
   def test_invert_booleans

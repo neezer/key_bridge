@@ -36,9 +36,9 @@ instance with your manually flipped map (**boring**), or just call
 `reverse!` on your first translator:
 
 ```ruby
-translator = BabelHash.new({ 'panda.bears' => 'grizzly.bears' })
+translator = BabelHash.new({ 'panda.bears' => 'grizzly.cubs' })
 translator.reverse!
-translator.translate({ grizzly: { bears: 'are cuddly' } })
+translator.translate({ grizzly: { cubs: 'are cuddly' } })
   #=> { panda: { bears: 'are cuddly' } }
 ```
 
@@ -57,7 +57,7 @@ I miss me some Ruby!
 Run the tests with
 
 ```
-bundle exec ruby -I. hash_translator_test.rb
+bundle exec ruby -I. babel_hash_test.rb
 ```
 
 ### Caveats
