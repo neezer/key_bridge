@@ -131,11 +131,16 @@ class BabelHashTest < MiniTest::Unit::TestCase
   end
 
   def test_deep_nest_to_deep_nest
-    # skip 'Inspired by the README, but not functional yet'
+    @map = { 'deeply.nested.keys' => 'other.keys.and.stuff' }
+    hash = { deeply: { nested: { keys: [1,2] } } }
 
-    @map = { 'deeply.nested.keys' => 'other.keys' }
-    hash = { other: { keys: [1,2] } }
+    assert_equal [1,2], translator.translate(hash)[:other][:keys][:and][:stuff]
+  end
 
-    assert_equal [1,2], translator.translate(hash)[:deeply][:nested][:keys]
+  def test_array_values
+    @map = { 'funny.things[1]' => 'the.funniest.thing' }
+    hash = { funny: { things: %i(ewoks kittens clowns) } }
+
+    assert_equal :kittens, translator.translate(hash)[:the][:funniest][:thing]
   end
 end

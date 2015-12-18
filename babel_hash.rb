@@ -1,7 +1,7 @@
 require 'active_support/core_ext/hash'
 
 class BabelHash
-  KEY_PATH_DELIMITER = '.'
+  KEYPATH_DELIMITER = '.'
 
   def initialize(map, opts = {})
     @map = map
@@ -28,6 +28,38 @@ class BabelHash
 
   private
 
+  def deep_get(keypath, target, index = nil)
+    first, *rest = *keypath.split(KEYPATH_DELIMITER)
+    first, index = detect_array(first, index)
+
+    if rest.any?
+      deep_get(rest.join(KEYPATH_DELIMITER), wia(target)[first], index)
+    elsif index && target[index].nil?
+      wia(target)[first][index]
+    elsif index
+      deep_get(keypath, target[index])
+    else
+      wia(target)[first]
+    end
+  end
+
+  def deep_set(keypath, value, target, index = nil)
+    target ||= index ? [] : {}
+    first, *rest = *keypath.split(KEYPATH_DELIMITER)
+    first, index = detect_array(first, index)
+
+    if rest.any?
+      target[first] =
+        deep_set(rest.join(KEYPATH_DELIMITER), value, target[first], index)
+    elsif index
+      target[index] = deep_set(keypath, value, target[index])
+    else
+      target[first] = value
+    end
+
+    target
+  end
+
   def invert_if(should_invert_booleans, value)
     if should_invert_booleans && (value == true || value == false)
       !value
@@ -36,49 +68,15 @@ class BabelHash
     end
   end
 
-  def deep_get(keypath, target, index = nil)
-    first, *rest = *keypath.split(KEY_PATH_DELIMITER)
-
-    if first =~ /(\[(\d+)\])$/
-      index = $2.to_i
-      first = first.gsub($1, '')
-    end
-
-    if rest.any?
-      deep_get(
-        rest.join(KEY_PATH_DELIMITER),
-        target.with_indifferent_access[first],
-        index
-      )
-    elsif index
-      deep_get(keypath, target[index])
+  def detect_array(first, index)
+    if match = first.match(/(\[(\d+)\])$/)
+      [first.gsub(match[1], ''), match[2].to_i]
     else
-      target.with_indifferent_access[first]
+      [first, index]
     end
   end
 
-  def deep_set(keypath, value, target, index = nil)
-    target ||= index ? [] : {}
-    first, *rest = *keypath.split(KEY_PATH_DELIMITER)
-
-    if first =~ /(\[(\d+)\])$/
-      index = $2.to_i
-      first = first.gsub($1, '')
-    end
-
-    if rest.any?
-      target[first] = deep_set(
-        rest.join(KEY_PATH_DELIMITER),
-        value,
-        target[first],
-        index
-      )
-    elsif index
-      target[index] = deep_set(keypath, value, target[index])
-    else
-      target[first] = value
-    end
-
-    target
+  def wia(hash)
+    hash.with_indifferent_access
   end
 end
