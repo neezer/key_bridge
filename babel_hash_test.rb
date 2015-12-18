@@ -143,4 +143,14 @@ class BabelHashTest < MiniTest::Unit::TestCase
 
     assert_equal :kittens, translator.translate(hash)[:the][:funniest][:thing]
   end
+
+  def test_ignores_empty_keypaths
+    @map = {
+      'one.thing' => 'the.funniest.thing',
+      'two.thing' => 'something'
+    }
+    hash = { two: { thing: :bananas } }
+
+    assert_equal({ 'something' => :bananas }, translator.translate(hash))
+  end
 end
