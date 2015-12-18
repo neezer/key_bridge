@@ -11,7 +11,7 @@ translator = BabelHash.new({
   'topLevelKeys'       => 'some_other_top_level_key',
   'nested.keys'        => 'another_key',
   'mix.and.match[2]'   => 'keep_it_simple_silly',
-  'deeply.nested.keys' => 'other.deeply.nested.keys' # presently a lie
+  'deeply.nested.keys' => 'other.deeply.nested.keys'
 })
 
 translator.translate({ mix: { and: { match: [1,2,3] } } })
