@@ -9,19 +9,27 @@ module KeyBridge
     end
 
     def [](keypath, target = @hash, index = nil)
-      first, *rest = keypath.split(@delimiter)
-      first, index, is_array = extract_array(first, index)
+      action = ValueAction.get(keypath, nil, index, @delimiter)
+      first, rest_keypath, index = action.arg_list
+      target ||= {}.with_indifferent_access
 
-      if rest.any?
-        method(:[])[rest.join(@delimiter), target[first], index]
-      elsif index && target[index].nil?
+      case action.description
+
+      when :get_value_at_keypath
+        method(:[])[rest_keypath, target[first]]
+
+      when :get_value_of_keypath_at_index
+        method(:[])[rest_keypath, target[first][index]]
+
+      when :get_value_at_index
         target[first][index]
-      elsif index
-        method(:[])[first, target[index]]
-      elsif is_array
+
+      when :fail_read_array_without_index
         fail ArrayIndexError.new(keypath)
-      elsif target
+
+      when :get_value_at_key
         target[first]
+
       end
     end
 
@@ -33,15 +41,13 @@ module KeyBridge
       case action.description
 
       when :set_key_to_keypath
-        target[first] = method(:[]=).call(
-          rest_keypath, value, target[first], index
-        )
+        target[first] = method(:[]=)[rest_keypath, value, target[first]]
 
       when :set_index_to_keypath
         target[first] ||= []
-        target[first][index] = method(:[]=).call(
+        target[first][index] = method(:[]=)[
           rest_keypath, value, target[first][index]
-        )
+        ]
 
       when :set_key_to_value_at_index
         target[first][index] = value
@@ -58,20 +64,8 @@ module KeyBridge
       target
     end
 
-    private
-
-    def extract_array(first, index)
-      if match = first.match(/(\[(\d*)\])$/)
-        [first.gsub(match[1], ''), to_int(match[2]), true]
-      else
-        [first, index, false]
-      end
-    end
-
-    def to_int(str)
-      unless str.empty?
-        str.to_i
-      end
+    def to_hash
+      @hash || {}
     end
 
     class ArrayIndexError < StandardError

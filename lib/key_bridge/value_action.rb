@@ -12,7 +12,7 @@ module KeyBridge
       first, *rest = keypath.split(delimiter)
       @rest = rest.join(delimiter)
       @first, @index, @is_array = extract_array(first, index)
-      @arg_list = [@first, @rest, @index, @is_array]
+      @arg_list = [@first, @rest, @index, @is_array, !!value]
     end
 
     def pick!
@@ -44,7 +44,7 @@ module KeyBridge
   end
 
   module ValueActions
-    class Action < Struct.new(:first, :rest, :index, :is_array)
+    class Action < Struct.new(:first, :rest, :index, :is_array, :value)
       def descriptor
         self.class.name.split('::').last.underscore.to_sym
       end
@@ -78,35 +78,73 @@ module KeyBridge
       def index_absent?
         !index_present?
       end
+
+      def value_present?
+        value.present?
+      end
+
+      def value_absent?
+        !value_present?
+      end
+    end
+
+    class GetValueOfKeypathAtIndex < Action
+      def match?
+        rest_present? && is_array? && index_present? && value_absent?
+      end
+    end
+
+    class GetValueAtIndex < Action
+      def match?
+        rest_absent? && is_array? && index_present? && value_absent?
+      end
+    end
+
+    class GetValueAtKeypath < Action
+      def match?
+        rest_present? && not_array? && value_absent?
+      end
+    end
+
+    class FailReadArrayWithoutIndex < Action
+      def match?
+        is_array? && index_absent? && value_absent?
+      end
+    end
+
+    class GetValueAtKey < Action
+      def match?
+        rest_absent? && index_absent? && not_array? && value_absent?
+      end
     end
 
     class SetKeyToValue < Action
       def match?
-        rest_absent? && index_absent? && not_array?
+        rest_absent? && index_absent? && not_array? && value_present?
       end
     end
 
     class SetKeyToKeypath < Action
       def match?
-        rest_present? && index_absent? && not_array?
+        rest_present? && index_absent? && not_array? && value_present?
       end
     end
 
     class SetIndexToKeypath < Action
       def match?
-        rest_present? && index_present? && is_array?
+        rest_present? && index_present? && is_array? && value_present?
       end
     end
 
     class AddValueToArrayAtKey < Action
       def match?
-        rest_absent? && index_absent? && is_array?
+        rest_absent? && index_absent? && is_array? && value_present?
       end
     end
 
     class SetKeyToValueAtIndex < Action
       def match?
-        rest_absent? && index_present? && is_array?
+        rest_absent? && index_present? && is_array? && value_present?
       end
     end
   end
