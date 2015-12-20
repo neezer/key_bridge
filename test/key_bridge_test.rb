@@ -1,8 +1,6 @@
-require 'minitest/autorun'
-require 'minitest/pride'
-require 'babel_hash'
+require 'key_bridge'
 
-class BabelHashTest < MiniTest::Unit::TestCase
+class KeyBridgeTest < MiniTest::Unit::TestCase
   def setup
     @opts = {}
     @map = {
@@ -18,7 +16,7 @@ class BabelHashTest < MiniTest::Unit::TestCase
   end
 
   def translator
-    @translator ||= BabelHash.new(@map, @opts)
+    @translator ||= KeyBridge::Translator.new(@map, @opts)
   end
 
   def google_api_hash
@@ -91,7 +89,7 @@ class BabelHashTest < MiniTest::Unit::TestCase
   end
 
   def test_invert_booleans
-    @opts = { invert_booleans: true }
+    @opts = { transforms: %i(InvertBooleans) }
 
     refute translator.translate(code_noble_hash)['includeInGlobalAddressList']
   end
@@ -165,7 +163,7 @@ class BabelHashTest < MiniTest::Unit::TestCase
     @map = { 'favorite.animals[]' => 'animal' }
     hash = { favorite: { animals: ['Fox'] } }
 
-    assert_raises(BabelHash::KeypathHash::IndexError) do
+    assert_raises(KeyBridge::KeypathHash::IndexError) do
       translator.translate(hash)
     end
   end

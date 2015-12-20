@@ -1,48 +1,10 @@
 require 'active_support/core_ext/hash'
-require 'pry'
 
-class BabelHash
-  def initialize(map, opts = {})
-    @map = map
-
-    @opts = {
-      invert_booleans: false
-    }.merge(opts)
-  end
-
-  def translate(subject)
-    invert_bools = method(:invert_if).curry[@opts[:invert_booleans]]
-    source = KeypathHash.new(subject)
-    target = KeypathHash.new({})
-
-    @map.each.with_object(target) do |(source_keypath, target_keypath), memo|
-      if retrieved_value = source[source_keypath]
-        memo[target_keypath] = invert_bools[retrieved_value]
-      end
-    end.to_hash
-  end
-
-  def reverse!
-    @map = Hash[@map.map { |k,v| [v,k] }]
-  end
-
-  private
-
-  def invert_if(should_invert_booleans, value)
-    if should_invert_booleans && (value == true || value == false)
-      !value
-    else
-      value
-    end
-  end
-
-  class Translator
-  end
-
+module KeyBridge
   class KeypathHash
     class IndexError < StandardError
       def initialize(keypath)
-        super(%(Must provide an index for reading values from '#{keypath}'!))
+        super %(Must provide an index for reading values from '#{keypath}'!)
       end
     end
 
