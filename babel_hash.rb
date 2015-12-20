@@ -1,6 +1,13 @@
 require 'active_support/core_ext/hash'
+require 'pry'
 
 class BabelHash
+  IndexError = Class.new(StandardError) do
+    def initialize(keypath)
+      super(%(Must provide an index for reading values from '#{keypath}'!))
+    end
+  end
+
   KEYPATH_DELIMITER = '.'
 
   def initialize(map, opts = {})
@@ -32,7 +39,7 @@ class BabelHash
 
   def deep_get(keypath, target, index = nil)
     first, *rest = *keypath.split(KEYPATH_DELIMITER)
-    first, index = detect_array(first, index)
+    first, index, is_array = detect_array(first, index)
 
     if rest.any?
       deep_get(rest.join(KEYPATH_DELIMITER), wia(target)[first], index)
@@ -40,21 +47,28 @@ class BabelHash
       wia(target)[first][index]
     elsif index
       deep_get(keypath, target[index])
+    elsif is_array
+      fail IndexError.new(keypath)
     elsif target
       wia(target)[first]
     end
   end
 
   def deep_set(keypath, value, target, index = nil)
-    target ||= index ? [] : {}
     first, *rest = *keypath.split(KEYPATH_DELIMITER)
-    first, index = detect_array(first, index)
+    first, index, is_array = detect_array(first, index)
+
+    target ||= index ? [] : {}
 
     if rest.any?
       target[first] =
         deep_set(rest.join(KEYPATH_DELIMITER), value, target[first], index)
     elsif index
       target[index] = deep_set(keypath, value, target[index])
+    elsif is_array && target[first]
+      target[first] << value
+    elsif is_array
+      target[first] = [value]
     else
       target[first] = value
     end
@@ -71,14 +85,20 @@ class BabelHash
   end
 
   def detect_array(first, index)
-    if match = first.match(/(\[(\d+)\])$/)
-      [first.gsub(match[1], ''), match[2].to_i]
+    if match = first.match(/(\[(\d*)\])$/)
+      [first.gsub(match[1], ''), to_int(match[2]), true]
     else
-      [first, index]
+      [first, index, false]
     end
   end
 
   def wia(hash)
     hash.with_indifferent_access
+  end
+
+  def to_int(str)
+    unless str.empty?
+      str.to_i
+    end
   end
 end

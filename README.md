@@ -60,13 +60,6 @@ Run the tests with
 bundle exec ruby -I. babel_hash_test.rb
 ```
 
-### Caveats
-
-- Makes use of recursion, so don't use it with crazy hashes, or [enable
-  TCO](http://nithinbekal.com/posts/ruby-tco/)
-- Credit for the `first, *rest` goes to the [inimitable Avdi
-  Grimm](http://devblog.avdi.org/2010/01/31/first-and-rest-in-ruby/)
-
 ### Is this the best solution there is?
 
 I've no clue!
@@ -75,3 +68,10 @@ I've no clue!
 
 ***HELLS NO!*** Might be full of bugs! Who knows! I'm tired and need to
 sleep!
+
+### Misc
+
+- Makes use of recursion, so don't use it with crazy hashes, or [enable
+  TCO](http://nithinbekal.com/posts/ruby-tco/)
+- Credit for the `first, *rest` goes to the [inimitable Avdi
+  Grimm](http://devblog.avdi.org/2010/01/31/first-and-rest-in-ruby/)

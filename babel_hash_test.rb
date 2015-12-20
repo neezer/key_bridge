@@ -153,4 +153,18 @@ class BabelHashTest < MiniTest::Unit::TestCase
 
     assert_equal({ 'something' => :bananas }, translator.translate(hash))
   end
+
+  def test_array_push_to_target_keypaths
+    @map = { 'animal' => 'favorite.animals[]' }
+    hash = { animal: 'Fox' }
+
+    assert_equal ['Fox'], translator.translate(hash)['favorite']['animals']
+  end
+
+  def test_raises_exception_for_reversed_array_pushes
+    @map = { 'favorite.animals[]' => 'animal' }
+    hash = { favorite: { animals: ['Fox'] } }
+
+    assert_raises(BabelHash::IndexError) { translator.translate(hash) }
+  end
 end
