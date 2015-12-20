@@ -1,15 +1,13 @@
-# NOTE! Doing a refactor here so things are BORKED! Check back soon!
-
-# BabelHash
+# KeyBridge
 
 Translates one hash to another, given a map. Inspired to make a generic
 solution to the problem outlined
 [here](http://codenoble.com/blog/transforming-hashes-a-refactoring-story/).
 
-### Basic Use
+### Usage
 
 ```ruby
-translator = BabelHash.new({
+translator = KeyBridge.new_translator({
   'topLevelKeys'       => 'some_other_top_level_key',
   'nested.keys'        => 'another_key',
   'mix.and.match[2]'   => 'keep_it_simple_silly',
@@ -23,10 +21,9 @@ translator.translate({ mix: { and: { match: [1,2,3] } } })
 You can also do silly things like invert booleans:
 
 ```ruby
-translator = BabelHash.new(
-  { 'a.truthy.value' => 'inverted.copy' },
-  { invert_booleans: true }
-)
+translator = KeyBridge.new_translator({
+  'a.truthy.value' => 'inverted.copy'
+}, transforms: %i(invert_booleans))
 
 translator.translate({ a: { truthy: { value: true } } })
   #=> { inverted: { copy: false } }
@@ -38,7 +35,7 @@ instance with your manually flipped map (**boring**), or just call
 `reverse!` on your first translator:
 
 ```ruby
-translator = BabelHash.new({ 'panda.bears' => 'grizzly.cubs' })
+translator = KeyBridge.new_translator({ 'panda.bears' => 'grizzly.cubs' })
 translator.reverse!
 translator.translate({ grizzly: { cubs: 'are cuddly' } })
   #=> { panda: { bears: 'are cuddly' } }
@@ -59,7 +56,7 @@ I miss me some Ruby!
 Run the tests with
 
 ```
-bundle exec ruby -I. babel_hash_test.rb
+bundle exec rake
 ```
 
 ### Is this the best solution there is?

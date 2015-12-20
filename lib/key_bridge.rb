@@ -1,4 +1,5 @@
 module KeyBridge
+  autoload :ProcRefinements, 'key_bridge/proc_refinements'
   autoload :KeypathHash, 'key_bridge/keypath_hash'
   autoload :Translator, 'key_bridge/translator'
 
@@ -6,4 +7,10 @@ module KeyBridge
     autoload :Base, 'key_bridge/value_transforms/base'
     autoload :InvertBooleans, 'key_bridge/value_transforms/invert_booleans'
   end
+
+  def new_translator(map = {}, opts = {})
+    Translator.new(map, opts)
+  end
+
+  module_function :new_translator
 end

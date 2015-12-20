@@ -1,4 +1,5 @@
 require 'key_bridge'
+require 'active_support/core_ext/string'
 
 class KeyBridgeTest < MiniTest::Test
   def setup
@@ -89,9 +90,13 @@ class KeyBridgeTest < MiniTest::Test
   end
 
   def test_invert_booleans
-    @opts = { transforms: %i(InvertBooleans) }
+    @opts = { transforms: %i(invert_booleans) }
+    key = 'includeInGlobalAddressList'
 
-    refute translator.translate(code_noble_hash)['includeInGlobalAddressList']
+    assert translator.translate(code_noble_hash).has_key?(key), <<-MSG.squish
+    Expected the translated hash to have the key #{key}!
+    MSG
+    refute translator.translate(code_noble_hash)[key]
   end
 
   def test_keypaths_work_with_symbol_keys

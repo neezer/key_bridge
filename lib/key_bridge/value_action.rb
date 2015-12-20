@@ -12,7 +12,7 @@ module KeyBridge
       first, *rest = keypath.split(delimiter)
       @rest = rest.join(delimiter)
       @first, @index, @is_array = extract_array(first, index)
-      @arg_list = [@first, @rest, @index, @is_array, !!value]
+      @arg_list = [@first, @rest, @index, @is_array, value]
     end
 
     def pick!
@@ -80,7 +80,11 @@ module KeyBridge
       end
 
       def value_present?
-        value.present?
+        if !!value == value && value == false
+          true # false values are present
+        else
+          value.present?
+        end
       end
 
       def value_absent?
