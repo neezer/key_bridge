@@ -1,6 +1,6 @@
 require 'key_bridge'
 
-class KeyBridgeTest < MiniTest::Unit::TestCase
+class KeyBridgeTest < MiniTest::Test
   def setup
     @opts = {}
     @map = {
@@ -163,7 +163,7 @@ class KeyBridgeTest < MiniTest::Unit::TestCase
     @map = { 'favorite.animals[]' => 'animal' }
     hash = { favorite: { animals: ['Fox'] } }
 
-    assert_raises(KeyBridge::KeypathHash::IndexError) do
+    assert_raises(KeyBridge::KeypathHash::ArrayIndexError) do
       translator.translate(hash)
     end
   end

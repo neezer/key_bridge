@@ -1,13 +1,8 @@
 require 'active_support/core_ext/hash'
+require 'key_bridge/value_action'
 
 module KeyBridge
   class KeypathHash
-    class IndexError < StandardError
-      def initialize(keypath)
-        super %(Must provide an index for reading values from '#{keypath}'!)
-      end
-    end
-
     def initialize(hash, delimiter: '.')
       @hash = hash.with_indifferent_access
       @delimiter = delimiter
@@ -18,38 +13,40 @@ module KeyBridge
       first, index, is_array = extract_array(first, index)
 
       if rest.any?
-        method(:[]).call(rest.join(@delimiter), target[first], index)
+        method(:[])[rest.join(@delimiter), target[first], index]
       elsif index && target[index].nil?
         target[first][index]
       elsif index
-        method(:[]).call(first, target[index])
+        method(:[])[first, target[index]]
       elsif is_array
-        fail IndexError.new(keypath)
+        fail ArrayIndexError.new(keypath)
       elsif target
         target[first]
       end
     end
 
     def []=(keypath, value, target = @hash, index = nil)
-      first, *rest = keypath.split(@delimiter)
-      first, index, is_array = extract_array(first, index)
+      action = ValueAction.get(keypath, value, index, @delimiter)
+      first, rest_keypath, index = action.arg_list
 
-      target ||= index ? [] : {}
-
-      if rest.any?
-        target[first] = method(:[]=).call(
-          rest.join(@delimiter),
-          value,
-          target[first],
-          index
-        )
-      elsif index
-        target[index] = method(:[]=).call(keypath, value, target[index])
-      elsif is_array && target[first]
+      case action.description
+      when :set_key_to_keypath
+        target ||= {}
+        target[first] = method(:[]=)[rest_keypath, value, target[first], index]
+      when :set_index_to_keypath
+        target[first] ||= []
+        target[first][index] = method(:[]=)[rest_keypath, value, target[first][index]]
+      when :set_key_to_value_at_index
+        target[first][index] = value
+      when :add_value_to_array_at_key
+        target ||= {}
+        target[first] ||= []
         target[first] << value
-      elsif is_array
+      when :set_key_to_new_array
+        target ||= {}
         target[first] = [value]
-      else
+      when :set_key_to_value
+        target ||= {}
         target[first] = value
       end
 
@@ -73,6 +70,12 @@ module KeyBridge
     def to_int(str)
       unless str.empty?
         str.to_i
+      end
+    end
+
+    class ArrayIndexError < StandardError
+      def initialize(keypath)
+        super %(Must provide an index for reading values from '#{keypath}'!)
       end
     end
   end
