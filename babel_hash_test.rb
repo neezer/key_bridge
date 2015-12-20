@@ -165,6 +165,8 @@ class BabelHashTest < MiniTest::Unit::TestCase
     @map = { 'favorite.animals[]' => 'animal' }
     hash = { favorite: { animals: ['Fox'] } }
 
-    assert_raises(BabelHash::IndexError) { translator.translate(hash) }
+    assert_raises(BabelHash::KeypathHash::IndexError) do
+      translator.translate(hash)
+    end
   end
 end

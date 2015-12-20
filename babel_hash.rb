@@ -2,14 +2,6 @@ require 'active_support/core_ext/hash'
 require 'pry'
 
 class BabelHash
-  IndexError = Class.new(StandardError) do
-    def initialize(keypath)
-      super(%(Must provide an index for reading values from '#{keypath}'!))
-    end
-  end
-
-  KEYPATH_DELIMITER = '.'
-
   def initialize(map, opts = {})
     @map = map
 
@@ -19,62 +11,22 @@ class BabelHash
   end
 
   def translate(subject)
-    return @translated if @translated
-
     invert_bools = method(:invert_if).curry[@opts[:invert_booleans]]
+    source = KeypathHash.new(subject)
+    target = KeypathHash.new({})
 
-    @translated = @map.each.with_object({}) do |(key, value), memo|
-      if retrieved_value = deep_get(key, subject)
-        deep_set(value, invert_bools[retrieved_value], memo)
+    @map.each.with_object(target) do |(source_keypath, target_keypath), memo|
+      if retrieved_value = source[source_keypath]
+        memo[target_keypath] = invert_bools[retrieved_value]
       end
-    end.with_indifferent_access
+    end.to_hash
   end
 
   def reverse!
     @map = Hash[@map.map { |k,v| [v,k] }]
-    @translated = nil
   end
 
   private
-
-  def deep_get(keypath, target, index = nil)
-    first, *rest = *keypath.split(KEYPATH_DELIMITER)
-    first, index, is_array = detect_array(first, index)
-
-    if rest.any?
-      deep_get(rest.join(KEYPATH_DELIMITER), wia(target)[first], index)
-    elsif index && target[index].nil?
-      wia(target)[first][index]
-    elsif index
-      deep_get(keypath, target[index])
-    elsif is_array
-      fail IndexError.new(keypath)
-    elsif target
-      wia(target)[first]
-    end
-  end
-
-  def deep_set(keypath, value, target, index = nil)
-    first, *rest = *keypath.split(KEYPATH_DELIMITER)
-    first, index, is_array = detect_array(first, index)
-
-    target ||= index ? [] : {}
-
-    if rest.any?
-      target[first] =
-        deep_set(rest.join(KEYPATH_DELIMITER), value, target[first], index)
-    elsif index
-      target[index] = deep_set(keypath, value, target[index])
-    elsif is_array && target[first]
-      target[first] << value
-    elsif is_array
-      target[first] = [value]
-    else
-      target[first] = value
-    end
-
-    target
-  end
 
   def invert_if(should_invert_booleans, value)
     if should_invert_booleans && (value == true || value == false)
@@ -84,21 +36,82 @@ class BabelHash
     end
   end
 
-  def detect_array(first, index)
-    if match = first.match(/(\[(\d*)\])$/)
-      [first.gsub(match[1], ''), to_int(match[2]), true]
-    else
-      [first, index, false]
+  class Translator
+  end
+
+  class KeypathHash
+    class IndexError < StandardError
+      def initialize(keypath)
+        super(%(Must provide an index for reading values from '#{keypath}'!))
+      end
     end
-  end
 
-  def wia(hash)
-    hash.with_indifferent_access
-  end
+    def initialize(hash, delimiter: '.')
+      @hash = hash.with_indifferent_access
+      @delimiter = delimiter
+    end
 
-  def to_int(str)
-    unless str.empty?
-      str.to_i
+    def [](keypath, target = @hash, index = nil)
+      first, *rest = keypath.split(@delimiter)
+      first, index, is_array = extract_array(first, index)
+
+      if rest.any?
+        method(:[]).call(rest.join(@delimiter), target[first], index)
+      elsif index && target[index].nil?
+        target[first][index]
+      elsif index
+        method(:[]).call(first, target[index])
+      elsif is_array
+        fail IndexError.new(keypath)
+      elsif target
+        target[first]
+      end
+    end
+
+    def []=(keypath, value, target = @hash, index = nil)
+      first, *rest = keypath.split(@delimiter)
+      first, index, is_array = extract_array(first, index)
+
+      target ||= index ? [] : {}
+
+      if rest.any?
+        target[first] = method(:[]=).call(
+          rest.join(@delimiter),
+          value,
+          target[first],
+          index
+        )
+      elsif index
+        target[index] = method(:[]=).call(keypath, value, target[index])
+      elsif is_array && target[first]
+        target[first] << value
+      elsif is_array
+        target[first] = [value]
+      else
+        target[first] = value
+      end
+
+      target
+    end
+
+    def to_hash
+      @hash || {}
+    end
+
+    private
+
+    def extract_array(first, index)
+      if match = first.match(/(\[(\d*)\])$/)
+        [first.gsub(match[1], ''), to_int(match[2]), true]
+      else
+        [first, index, false]
+      end
+    end
+
+    def to_int(str)
+      unless str.empty?
+        str.to_i
+      end
     end
   end
 end
