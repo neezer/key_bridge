@@ -28,33 +28,34 @@ module KeyBridge
     def []=(keypath, value, target = @hash, index = nil)
       action = ValueAction.get(keypath, value, index, @delimiter)
       first, rest_keypath, index = action.arg_list
+      target ||= {}.with_indifferent_access
 
       case action.description
+
       when :set_key_to_keypath
-        target ||= {}
-        target[first] = method(:[]=)[rest_keypath, value, target[first], index]
+        target[first] = method(:[]=).call(
+          rest_keypath, value, target[first], index
+        )
+
       when :set_index_to_keypath
         target[first] ||= []
-        target[first][index] = method(:[]=)[rest_keypath, value, target[first][index]]
+        target[first][index] = method(:[]=).call(
+          rest_keypath, value, target[first][index]
+        )
+
       when :set_key_to_value_at_index
         target[first][index] = value
+
       when :add_value_to_array_at_key
-        target ||= {}
         target[first] ||= []
         target[first] << value
-      when :set_key_to_new_array
-        target ||= {}
-        target[first] = [value]
+
       when :set_key_to_value
-        target ||= {}
         target[first] = value
+
       end
 
       target
-    end
-
-    def to_hash
-      @hash || {}
     end
 
     private

@@ -18,7 +18,8 @@ module KeyBridge
     def pick!
       @description = ValueActions.constants
         .map(&ValueActions.method(:const_get))
-        .select { |action| action.applicable?(*@arg_list) }
+        .map { |action_class| action_class.new(*@arg_list) }
+        .select(&:match?)
         .map(&:descriptor)
         .first
 
@@ -36,66 +37,77 @@ module KeyBridge
     end
 
     def to_int(str)
-      unless str.empty?
+      if str.present?
         str.to_i
       end
     end
   end
 
   module ValueActions
-    class Base
-      def self.applicable?(*args)
+    class Action < Struct.new(:first, :rest, :index, :is_array)
+      def descriptor
+        self.class.name.split('::').last.underscore.to_sym
+      end
+
+      def match?
         false
       end
 
-      def self.descriptor
-        name.split('::').last.underscore.to_sym
+      private
+
+      def rest_present?
+        rest.present?
+      end
+
+      def rest_absent?
+        !rest_present?
+      end
+
+      def is_array?
+        is_array == true
+      end
+
+      def not_array?
+        !is_array?
+      end
+
+      def index_present?
+        index.present?
+      end
+
+      def index_absent?
+        !index_present?
       end
     end
 
-    class SetKeyToValueAtIndex < Base
-      def self.applicable?(first, rest, index, is_array)
-        [!rest.present?, !index.nil?, is_array].all?
+    class SetKeyToValue < Action
+      def match?
+        rest_absent? && index_absent? && not_array?
       end
     end
 
-    class AddValueToArrayAtKey < Base
-      def self.applicable?(first, rest, index, is_array)
-        [!rest.present?, index.nil?, is_array].all?
+    class SetKeyToKeypath < Action
+      def match?
+        rest_present? && index_absent? && not_array?
       end
     end
 
-    class SetIndexToKeypath < Base
-      def self.applicable?(first, rest, index, is_array)
-        [rest.present?, !index.nil?, is_array].all?
+    class SetIndexToKeypath < Action
+      def match?
+        rest_present? && index_present? && is_array?
       end
     end
 
-    class SetKeyToKeypath < Base
-      def self.applicable?(first, rest, index, is_array)
-        [rest.present?, index.nil?].all?
+    class AddValueToArrayAtKey < Action
+      def match?
+        rest_absent? && index_absent? && is_array?
       end
     end
 
-    class SetKeyToValue < Base
-      def self.applicable?(first, rest, index, is_array)
-        [!rest.present?, index.nil?].all?
+    class SetKeyToValueAtIndex < Action
+      def match?
+        rest_absent? && index_present? && is_array?
       end
     end
   end
 end
-
-#
-      # if rest.any?
-      #   target[first] = method(:[]=)[rest.join(@delimiter), value, target[first], index]
-      # elsif is_array && target[first] && index
-      #   target[first][index] = value
-      # elsif is_array && target[first]
-      #   target[first] << value
-      # elsif is_array
-      #   target[first] = [value]
-      # elsif index
-      #   target[index] = method(:[]=)[first, value, target[index]]
-      # else
-      #   target[first] = value
-      # end
