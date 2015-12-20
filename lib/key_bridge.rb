@@ -1,5 +1,4 @@
 module KeyBridge
-  autoload :ProcRefinements, 'key_bridge/proc_refinements'
   autoload :KeypathHash, 'key_bridge/keypath_hash'
   autoload :Translator, 'key_bridge/translator'
 
