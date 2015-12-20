@@ -1,3 +1,5 @@
+# NOTE! Doing a refactor here so things are BORKED! Check back soon!
+
 # BabelHash
 
 Translates one hash to another, given a map. Inspired to make a generic
