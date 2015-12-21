@@ -103,10 +103,5 @@ bundle exec rake
 
 ### Notes
 
-- Makes use of recursion, so don't use it with hashes with keys nested thousands of levels deep, or [enable
-  
-  TCO](http://nithinbekal.com/posts/ruby-tco/)
-  
-- Credit for the `first, *rest` goes to the [inimitable Avdi
-  
-  Grimm](http://devblog.avdi.org/2010/01/31/first-and-rest-in-ruby/)
+- Makes use of recursion, so don't use it with hashes with keys nested thousands of levels deep, or [enable TCO](http://nithinbekal.com/posts/ruby-tco/)
+- Credit for the `first, *rest` goes to the [inimitable Avdi Grimm](http://devblog.avdi.org/2010/01/31/first-and-rest-in-ruby/)
