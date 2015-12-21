@@ -2,6 +2,10 @@
 
 Translates one hash to another, given a map. Inspired to make a generic solution to the problem outlined [here](http://codenoble.com/blog/transforming-hashes-a-refactoring-story/).
 
+Named after the Key Bridge in Washington DC, because why not!
+
+![key bridge](https://upload.wikimedia.org/wikipedia/commons/8/83/Key_Bridge,_Washington_D.C.jpg)
+
 ### Usage
 
 #### Basic
