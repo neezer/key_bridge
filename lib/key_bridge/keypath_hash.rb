@@ -59,6 +59,9 @@ module KeyBridge
       when :set_key_to_value
         target[first] = value
 
+      when :add_array_with_keypath
+        target[first] = [method(:[]=)[rest_keypath, value]]
+
       end
 
       target

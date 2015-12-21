@@ -92,6 +92,12 @@ module KeyBridge
       end
     end
 
+    class AddArrayWithKeypath < Action
+      def match?
+        rest_present? && is_array? && index_absent? && value_present?
+      end
+    end
+
     class GetValueOfKeypathAtIndex < Action
       def match?
         rest_present? && is_array? && index_present? && value_absent?

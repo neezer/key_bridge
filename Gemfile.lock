@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     key_bridge (0.0.1)
-      activesupport (~> 4.2.5)
+      activesupport (~> 4.2, >= 4.2.5)
 
 GEM
   remote: https://rubygems.org/
@@ -27,4 +27,4 @@ DEPENDENCIES
   key_bridge!
 
 BUNDLED WITH
-   1.10.6
+   1.11.1

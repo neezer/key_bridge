@@ -1,76 +1,108 @@
 # KeyBridge
 
-Translates one hash to another, given a map. Inspired to make a generic
-solution to the problem outlined
-[here](http://codenoble.com/blog/transforming-hashes-a-refactoring-story/).
+Translates one hash to another, given a map. Inspired to make a generic solution to the problem outlined [here](http://codenoble.com/blog/transforming-hashes-a-refactoring-story/).
 
 ### Usage
 
-```ruby
-translator = KeyBridge.new_translator({
-  'topLevelKeys'       => 'some_other_top_level_key',
-  'nested.keys'        => 'another_key',
-  'mix.and.match[2]'   => 'keep_it_simple_silly',
-  'deeply.nested.keys' => 'other.deeply.nested.keys'
-})
+#### Basic
 
-translator.translate({ mix: { and: { match: [1,2,3] } } })
-  #=> { keep_it_simple_silly: 3 }
+Make a translator with the map you want to use:
+
+``` ruby
+translator = KeyBridge.new_translator({ 'name.firstName' => 'first_name' })
 ```
 
-You can also do silly things like invert booleans:
+Both keys and values can use keypath syntax. By default, the delimiter is a `.`, but you can pass in  a custom delimieter if you want to use something else, eg.
 
-```ruby
-translator = KeyBridge.new_translator({
-  'a.truthy.value' => 'inverted.copy'
-}, transforms: %i(invert_booleans))
-
-translator.translate({ a: { truthy: { value: true } } })
-  #=> { inverted: { copy: false } }
+``` ruby
+translator = KeyBridge.new_translator(
+  { 'name@firstName' => 'first_name' },
+  delimiter: '@'
+)
 ```
 
-Also also, if you want to flip yourself around and do opposite
-translations, you can either do the normal thing of making a new
-instance with your manually flipped map (**boring**), or just call
-`reverse!` on your first translator:
+Once you have a translator object, give it a hash that matches the left side of the map:
 
-```ruby
+``` ruby
+translator.translate({ name: { firstName: 'Milton' } })
+#=> { 'first_name' => 'Milton' }
+```
+
+Note that you can use either symbols or strings for the hash keys in the given hash: KeyBridge uses [ActiveSupport#hash_with_indifferent_access](https://github.com/rails/rails/blob/master/activesupport/lib/active_support/hash_with_indifferent_access.rb) so it shouldn't matter. The keypaths provided in the map must always be strings.
+
+#### Arrays
+
+Keypaths support array queries too! Just provide the array index as part of the keypath:
+
+``` ruby
+translator = KeyBridge.new_translator({ 'organizations[0].title' => 'title' })
+```
+
+Then it'll pull out the value at that array in the translated hash:
+
+``` ruby
+translator.translate({ organizations: [{ title: 'Collator' }] })
+#=> { title: 'Collator' }
+```
+
+You can also write to arrays, either by index or by pushing an empty array. For example:
+
+``` ruby
+translator = KeyBridge.new_translator({ 'title' => 'organizations[].title' })
+translator.translate({ title: 'Collator' })
+#=> { organizations: [{ title: 'Collator' }] }
+
+translator = KeyBridge.new_translator({ 'title' => 'organizations[2].title' })
+translator.translate({ title: 'Collator' })
+#=> { organizations: [nil, nil, { title: 'Collator' }] }
+```
+
+#### Reverse
+
+If you want to do a reverse translation on an already instantiated translator object, just call `reverse!` on it to flip the map:
+
+``` ruby
 translator = KeyBridge.new_translator({ 'panda.bears' => 'grizzly.cubs' })
 translator.reverse!
 translator.translate({ grizzly: { cubs: 'are cuddly' } })
-  #=> { panda: { bears: 'are cuddly' } }
+#=> { panda: { bears: 'are cuddly' } }
 ```
 
-Lastly, uses
-[ActiveSupport#hash_with_indifferent_access](https://github.com/rails/rails/blob/master/activesupport/lib/active_support/hash_with_indifferent_access.rb) so it shouldn't
-matter if you give it symbols or strings.
+#### Options
 
-### Why?
+``` ruby
+translator = KeyBridge.new_translator(map, transforms: %i(), delimiter: '.')
+```
 
-Mostly because I was bored, and this is a problem I've ran into on
-occasion myself. And I've been living in [React](https://facebook.github.io/react/)/[Redux](http://redux.js.org/) land these days and
-I miss me some Ruby!
+- **transforms**
+  
+  This is where you can specify any value transformations you want to apply during the translation. This is an array of symbols corresponding to transformation strategies in `KeyBridge::ValueTransforms`
+  
+  Default: []
+  
+  Available transforms:
+  
+  - *:invert_booleans* — Flips all boolean values.
 
-### What else?
+
+- **delimiter**
+  
+  Specify a custom delimiter. Default is `.`
+
+### Testing
 
 Run the tests with
 
-```
+``` 
 bundle exec rake
 ```
 
-### Is this the best solution there is?
+### Notes
 
-I've no clue!
-
-### Should I use this in production?
-
-***HELLS NO!*** Might be full of bugs! Who knows! I'm tired and need to
-sleep!
-
-### Misc
-
-- Makes use of recursion, so don't use it with crazy hashes, or [enable
+- Makes use of recursion, so don't use it with hashes with keys nested thousands of levels deep, or [enable
+  
   TCO](http://nithinbekal.com/posts/ruby-tco/)
+  
 - Credit for the `first, *rest` goes to the [inimitable Avdi
+  
   Grimm](http://devblog.avdi.org/2010/01/31/first-and-rest-in-ruby/)
