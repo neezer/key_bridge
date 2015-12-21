@@ -69,7 +69,7 @@ translator = KeyBridge.new_translator(map, transforms: %i(), delimiter: '.')
 
 - **transforms**
   
-  This is where you can specify any value transformations you want to apply during the translation. This is an array of symbols corresponding to transformation strategies in `KeyBridge::ValueTransforms`
+  This is where you can specify any value transformations you want to apply during the translation. This is an array of symbols corresponding to transformation strategies in [`KeyBridge::ValueTransforms`](https://github.com/neezer/key_bridge/tree/master/lib/key_bridge/value_transforms)
   
   Default: []
   
