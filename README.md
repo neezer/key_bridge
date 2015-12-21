@@ -12,14 +12,7 @@ Make a translator with the map you want to use:
 translator = KeyBridge.new_translator({ 'name.firstName' => 'first_name' })
 ```
 
-Both keys and values can use keypath syntax. By default, the delimiter is a `.`, but you can pass in  a custom delimieter if you want to use something else, eg.
-
-``` ruby
-translator = KeyBridge.new_translator(
-  { 'name@firstName' => 'first_name' },
-  delimiter: '@'
-)
-```
+Both keys and values can use keypath syntax. By default, the delimiter is a `.`, but you can pass in  a custom delimieter if you want to use something else (see [Options](#options)).
 
 Once you have a translator object, give it a hash that matches the left side of the map:
 
@@ -42,7 +35,7 @@ Then it'll pull out the value at that array in the translated hash:
 
 ``` ruby
 translator.translate({ organizations: [{ title: 'Collator' }] })
-#=> { title: 'Collator' }
+#=> { 'title' => 'Collator' }
 ```
 
 You can also write to arrays, either by index or by pushing an empty array. For example:
@@ -50,11 +43,11 @@ You can also write to arrays, either by index or by pushing an empty array. For 
 ``` ruby
 translator = KeyBridge.new_translator({ 'title' => 'organizations[].title' })
 translator.translate({ title: 'Collator' })
-#=> { organizations: [{ title: 'Collator' }] }
+#=> { 'organizations' => [{ 'title' => 'Collator' }] }
 
 translator = KeyBridge.new_translator({ 'title' => 'organizations[2].title' })
 translator.translate({ title: 'Collator' })
-#=> { organizations: [nil, nil, { title: 'Collator' }] }
+#=> { 'organizations' => [nil, nil, { 'title' => 'Collator' }] }
 ```
 
 #### Reverse
@@ -65,10 +58,10 @@ If you want to do a reverse translation on an already instantiated translator ob
 translator = KeyBridge.new_translator({ 'panda.bears' => 'grizzly.cubs' })
 translator.reverse!
 translator.translate({ grizzly: { cubs: 'are cuddly' } })
-#=> { panda: { bears: 'are cuddly' } }
+#=> { 'panda' => { 'bears' => 'are cuddly' } }
 ```
 
-#### Options
+#### Options <a id="options"></a>
 
 ``` ruby
 translator = KeyBridge.new_translator(map, transforms: %i(), delimiter: '.')
@@ -83,11 +76,22 @@ translator = KeyBridge.new_translator(map, transforms: %i(), delimiter: '.')
   Available transforms:
   
   - *:invert_booleans* — Flips all boolean values.
-
+  
+  ```ruby
+  translator = KeyBridge.new_translator({ 'a.b' => 'x.y' }, transforms: %i(invert_booleans))
+  translator.translate({ a: { b: false } })
+  #=> { 'x' => { 'y' => true } }
+  ```
 
 - **delimiter**
   
   Specify a custom delimiter. Default is `.`
+
+  ```ruby
+  translator = KeyBridge.new_translator({ 'a@b' => 'x@y' }, delimiter: '@')
+  translator.translate({ a: { b: 'c' } })
+  #=> { 'x' => { 'y' => 'c' } }
+  ```
 
 ### Testing
 
