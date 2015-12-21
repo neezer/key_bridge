@@ -12,7 +12,6 @@ module KeyBridge
 
       @transforms = (ValueTransforms.constants & transforms)
         .map(&ValueTransforms.method(:const_get))
-        .map(&:new)
 
       @delimiter = delimiter
     end
@@ -20,11 +19,13 @@ module KeyBridge
     def translate(subject)
       source = KeypathHash.new(subject, delimiter: @delimiter)
       target = KeypathHash.new({}, delimiter: @delimiter)
-      apply_transform = ->(value, transformFn) { transformFn.transform(value) }
 
       @map.each.with_object(target) do |(source_keypath, target_keypath), memo|
         next unless value = source[source_keypath]
-        memo[target_keypath] = @transforms.reduce(value, &apply_transform)
+
+        memo[target_keypath] = @transforms.reduce(value) do |val, transform|
+          transform.new(target_keypath, val).transform
+        end
       end.to_hash
     end
 
