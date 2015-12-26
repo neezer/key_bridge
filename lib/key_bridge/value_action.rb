@@ -8,10 +8,10 @@ module KeyBridge
       self.new(*args).pick!
     end
 
-    def initialize(keypath, value, index, delimiter)
+    def initialize(keypath, value, delimiter)
       first, *rest = keypath.split(delimiter)
       @rest = rest.join(delimiter)
-      @first, @index, @is_array = extract_array(first, index)
+      @first, @index, @is_array = extract_array(first)
       @arg_list = [@first, @rest, @index, @is_array, value]
     end
 
@@ -28,11 +28,11 @@ module KeyBridge
 
     private
 
-    def extract_array(first, index)
+    def extract_array(first)
       if match = first.match(/(\[(\d*)\])$/)
         [first.gsub(match[1], ''), to_int(match[2]), true]
       else
-        [first, index, false]
+        [first, nil, false]
       end
     end
 

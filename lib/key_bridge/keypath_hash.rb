@@ -8,8 +8,8 @@ module KeyBridge
       @delimiter = delimiter
     end
 
-    def [](keypath, target = @hash, index = nil)
-      action = ValueAction.get(keypath, nil, index, @delimiter)
+    def [](keypath, target = @hash)
+      action = ValueAction.get(keypath, nil, @delimiter)
       first, rest_keypath, index = action.arg_list
       target ||= {}.with_indifferent_access
 
@@ -33,8 +33,8 @@ module KeyBridge
       end
     end
 
-    def []=(keypath, value, target = @hash, index = nil)
-      action = ValueAction.get(keypath, value, index, @delimiter)
+    def []=(keypath, value, target = @hash)
+      action = ValueAction.get(keypath, value, @delimiter)
       first, rest_keypath, index = action.arg_list
       target ||= {}.with_indifferent_access
 
